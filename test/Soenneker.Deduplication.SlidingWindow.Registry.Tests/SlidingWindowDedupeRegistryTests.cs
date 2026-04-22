@@ -1,20 +1,19 @@
 using Soenneker.Deduplication.SlidingWindow.Registry.Abstract;
-using Soenneker.Tests.FixturedUnit;
-using Xunit;
+using Soenneker.Tests.HostedUnit;
 
 namespace Soenneker.Deduplication.SlidingWindow.Registry.Tests;
 
-[Collection("Collection")]
-public sealed class SlidingWindowDedupeRegistryTests : FixturedUnitTest
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public sealed class SlidingWindowDedupeRegistryTests : HostedUnitTest
 {
     private readonly ISlidingWindowDedupeRegistry _util;
 
-    public SlidingWindowDedupeRegistryTests(Fixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public SlidingWindowDedupeRegistryTests(Host host) : base(host)
     {
         _util = Resolve<ISlidingWindowDedupeRegistry>(true);
     }
 
-    [Fact]
+    [Test]
     public void Default()
     {
 
