@@ -38,7 +38,7 @@ jobs:
         run: dotnet build test/Soenneker.Deduplication.SlidingWindow.Registry.Tests/Soenneker.Deduplication.SlidingWindow.Registry.Tests.csproj --configuration Release --no-restore --verbosity minimal
 
       - name: Test
-        run: dotnet test test/Soenneker.Deduplication.SlidingWindow.Registry.Tests/Soenneker.Deduplication.SlidingWindow.Registry.Tests.csproj --configuration Release --no-build --no-restore --verbosity minimal
+        run: dotnet test --project test/Soenneker.Deduplication.SlidingWindow.Registry.Tests/Soenneker.Deduplication.SlidingWindow.Registry.Tests.csproj --configuration Release --no-build --no-restore --verbosity minimal
 
       - name: Pack
         run: dotnet pack src/Soenneker.Deduplication.SlidingWindow.Registry/Soenneker.Deduplication.SlidingWindow.Registry.csproj --configuration Release --no-build --no-restore --output . --verbosity minimal
