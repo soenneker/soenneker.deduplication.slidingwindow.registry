@@ -24,10 +24,18 @@ public interface ISlidingWindowDedupeRegistry : IDisposable, IAsyncDisposable
     /// Synchronously gets the sliding window dedupe for <paramref name="key"/>, creating and caching it with
     /// <paramref name="window"/> and <paramref name="rotationInterval"/> if missing.
     /// </summary>
+    /// <param name="key">Key used to locate the target entry.</param>
+    /// <param name="window">Window for the get sync operation.</param>
+    /// <param name="rotationInterval">Interval between key or resource rotations.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The resulting sliding Window Dedupe.</returns>
     ISlidingWindowDedupe GetSync(string key, TimeSpan window, TimeSpan rotationInterval, System.Threading.CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Attempts to get a cached sliding window dedupe for <paramref name="key"/> without creating one.
     /// </summary>
+    /// <param name="key">Key used to locate the target entry.</param>
+    /// <param name="value">Receives the matching value when the lookup succeeds.</param>
+    /// <returns>true if the requested update was applied; otherwise, false.</returns>
     bool TryGet(string key, out ISlidingWindowDedupe? value);
 }

@@ -12,6 +12,8 @@ public static class SlidingWindowDedupeRegistryRegistrar
     /// <summary>
     /// Adds <see cref="ISlidingWindowDedupeRegistry"/> as a singleton service. <para/>
     /// </summary>
+    /// <param name="services">Service collection that receives the registration.</param>
+    /// <returns>The same service collection, so additional registrations can be chained.</returns>
     public static IServiceCollection AddSlidingWindowDedupeRegistryAsSingleton(this IServiceCollection services)
     {
         services.TryAddSingleton<ISlidingWindowDedupeRegistry, SlidingWindowDedupeRegistry>();
@@ -22,6 +24,8 @@ public static class SlidingWindowDedupeRegistryRegistrar
     /// <summary>
     /// Adds <see cref="ISlidingWindowDedupeRegistry"/> as a scoped service. <para/>
     /// </summary>
+    /// <param name="services">Service collection that receives the registration.</param>
+    /// <returns>The same service collection, so additional registrations can be chained.</returns>
     public static IServiceCollection AddSlidingWindowDedupeRegistryAsScoped(this IServiceCollection services)
     {
         services.TryAddScoped<ISlidingWindowDedupeRegistry, SlidingWindowDedupeRegistry>();
