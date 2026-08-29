@@ -5,6 +5,7 @@ using Soenneker.Deduplication.SlidingWindow.Abstract;
 using Soenneker.Deduplication.SlidingWindow.Registry.Abstract;
 using Soenneker.Dictionaries.Singletons;
 namespace Soenneker.Deduplication.SlidingWindow.Registry;
+/// <inheritdoc cref="ISlidingWindowDedupeRegistry"/>
 public sealed class SlidingWindowDedupeRegistry : ISlidingWindowDedupeRegistry
 {
     private readonly SingletonDictionary<ISlidingWindowDedupe, TimeSpan, TimeSpan> _dictionary;
