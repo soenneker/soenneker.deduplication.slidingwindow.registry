@@ -5,43 +5,58 @@
 
 # Soenneker.Deduplication.SlidingWindow.Registry
 
-A keyed registry of sliding window dedupe instances backed by `Soenneker.Dictionaries.Singletons.SingletonDictionary{TValue,T1,T2}`.
+A thread-safe registry that creates and reuses one in-memory sliding-window deduplicator per string key.
 
-## Install
+## Installation
 
 ```bash
 dotnet add package Soenneker.Deduplication.SlidingWindow.Registry
 ```
 
-## Quick start
+## Registration
 
 ```csharp
 using Soenneker.Deduplication.SlidingWindow.Registry.Registrars;
-using Microsoft.Extensions.DependencyInjection;
 
-var services = new ServiceCollection();
-var result = services.AddSlidingWindowDedupeRegistryAsSingleton();
+services.AddSlidingWindowDedupeRegistryAsSingleton();
 ```
 
-Adds `ISlidingWindowDedupeRegistry` as a singleton service.
+Singleton registration shares each key’s recent-history window across dependency-injection scopes. Use `AddSlidingWindowDedupeRegistryAsScoped()` only when each scope should have independent history.
 
-## What you get
+## Usage
 
-- `ISlidingWindowDedupeRegistry` — A keyed registry of sliding window dedupe instances backed by `Soenneker.Dictionaries.Singletons.SingletonDictionary{TValue,T1,T2}`.
-- `SlidingWindowDedupeRegistryRegistrar` — A keyed registry of sliding window dedupe instances.
+```csharp
+using Soenneker.Deduplication.SlidingWindow.Abstract;
+using Soenneker.Deduplication.SlidingWindow.Registry.Abstract;
 
-## API at a glance
+public sealed class EventConsumer(ISlidingWindowDedupeRegistry registry)
+{
+    public async ValueTask<bool> ShouldProcess(string tenantId, string eventId, CancellationToken cancellationToken)
+    {
+        ISlidingWindowDedupe dedupe = await registry.Get(
+            key: $"tenant:{tenantId}",
+            window: TimeSpan.FromMinutes(10),
+            rotationInterval: TimeSpan.FromSeconds(10),
+            cancellationToken);
 
-| API | What it does | Result / important behavior |
-| --- | --- | --- |
-| `ISlidingWindowDedupeRegistry.Get(key, window, rotationInterval, cancellationToken)` | Gets the sliding window dedupe for `key`, creating and caching it with `window` and `rotationInterval` if missing. | The cached or newly created `ISlidingWindowDedupe`. |
-| `ISlidingWindowDedupeRegistry.GetSync(key, window, rotationInterval, cancellationToken)` | Synchronously gets the sliding window dedupe for `key`, creating and caching it with `window` and `rotationInterval` if missing. | The resulting sliding Window Dedupe. |
-| `ISlidingWindowDedupeRegistry.TryGet(key, value)` | Attempts to get a cached sliding window dedupe for `key` without creating one. | true if the requested update was applied; otherwise, false. |
-| `SlidingWindowDedupeRegistryRegistrar.AddSlidingWindowDedupeRegistryAsSingleton(services)` | Adds `ISlidingWindowDedupeRegistry` as a singleton service. | The same service collection, so additional registrations can be chained. |
-| `SlidingWindowDedupeRegistryRegistrar.AddSlidingWindowDedupeRegistryAsScoped(services)` | Adds `ISlidingWindowDedupeRegistry` as a scoped service. | The same service collection, so additional registrations can be chained. |
+        return dedupe.TryMarkSeen(eventId);
+    }
+}
+```
 
-## Practical notes
+The first successful lookup creates the instance. Later calls for the same key return it even when they supply a different window or rotation interval, so keep those settings consistent.
 
-- Cancellation stops pending work; it does not undo work that has already completed.
-- Calls that return a cached or singleton value reuse the same instance until the owning service is disposed.
-- Dispose instances you own when their scope ends so held resources can be released.
+## Releasing inactive keys
+
+Each registry key owns a set and a background rotation timer. The number of registry keys is not bounded; do not derive keys from uncontrolled high-cardinality input.
+
+```csharp
+await registry.Remove($"tenant:{tenantId}", cancellationToken);
+
+// Dispose every cached set and clear all history:
+await registry.Clear(cancellationToken);
+```
+
+Removal disposes the cached instance. Do not continue using an instance after its key is removed. A later `Get` creates a fresh window with the newly supplied configuration. `TryGet` checks the cache without creating anything.
+
+Dispose the registry itself at the end of its lifetime so all remaining rotation tasks are stopped.
