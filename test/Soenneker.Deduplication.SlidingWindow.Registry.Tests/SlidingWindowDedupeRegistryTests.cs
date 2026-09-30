@@ -19,7 +19,7 @@ public sealed class SlidingWindowDedupeRegistryTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Remove_discards_history_and_configuration(CancellationToken cancellationToken)
+    public async ValueTask Remove_discards_history_and_configuration(CancellationToken cancellationToken)
     {
         ISlidingWindowDedupe first = await _util.Get("scope-remove", TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(10), cancellationToken: cancellationToken);
         first.TryMarkSeen("item-1").Should().BeTrue();
